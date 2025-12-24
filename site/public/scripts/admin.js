@@ -1,55 +1,56 @@
-import { getSupabaseClient } from "../scripts/supabase-client.js";
+import { getSupabaseClient } from "./supabase-client.js";
 
-function el(id){ return document.getElementById(id); }
+const $ = (id) => document.getElementById(id);
 
-async function requireSupabase() {
+async function sb() {
   return await getSupabaseClient();
 }
 
-async function refreshSessionUI() {
-  const sb = await requireSupabase();
-  const { data } = await sb.auth.getSession();
-  const authed = !!data.session;
+async function refreshUI() {
+  const client = await sb();
+  const { data, error } = await client.auth.getSession();
+  if (error) console.error(error);
 
-  el("loginPanel").style.display = authed ? "none" : "block";
-  el("adminPanel").style.display = authed ? "block" : "none";
-  el("logoutBtn").style.display = authed ? "inline-block" : "none";
+  const authed = !!data?.session;
 
-  if (authed) {
-    await loadAllAnnouncements();
-  }
+  $("loginPanel").style.display = authed ? "none" : "block";
+  $("adminPanel").style.display = authed ? "block" : "none";
+  $("logoutBtn").style.display = authed ? "inline-block" : "none";
+
+  if (authed) await loadAllAnnouncements();
 }
 
-async function login(email, password) {
-  const sb = await requireSupabase();
-  return await sb.auth.signInWithPassword({ email, password });
+async function doLogin(email, password) {
+  const client = await sb();
+  return await client.auth.signInWithPassword({ email, password });
 }
 
-async function logout() {
-  const sb = await requireSupabase();
-  await sb.auth.signOut();
+async function doLogout() {
+  const client = await sb();
+  return await client.auth.signOut();
 }
 
 async function addAnnouncement(payload) {
-  const sb = await requireSupabase();
-  return await sb.from("announcements").insert([payload]);
+  const client = await sb();
+  return await client.from("announcements").insert([payload]);
 }
 
 async function deleteAnnouncement(id) {
-  const sb = await requireSupabase();
-  return await sb.from("announcements").delete().eq("id", id);
+  const client = await sb();
+  return await client.from("announcements").delete().eq("id", id);
 }
 
 async function togglePublished(id, published) {
-  const sb = await requireSupabase();
-  return await sb.from("announcements").update({ published }).eq("id", id);
+  const client = await sb();
+  return await client.from("announcements").update({ published }).eq("id", id);
 }
 
 async function loadAllAnnouncements() {
-  const mount = el("annList");
+  const mount = $("annList");
   mount.textContent = "Loading…";
-  const sb = await requireSupabase();
-  const { data, error } = await sb
+
+  const client = await sb();
+  const { data, error } = await client
     .from("announcements")
     .select("id,title,body,published,created_at")
     .order("created_at", { ascending: false })
@@ -84,7 +85,9 @@ async function loadAllAnnouncements() {
 
     const m = document.createElement("div");
     m.className = "card-meta";
-    m.textContent = ${new Date(item.created_at).toLocaleString()} • ;
+    m.textContent =
+      `${new Date(item.created_at).toLocaleString()} • ` +
+      (item.published ? "PUBLISHED" : "DRAFT");
 
     left.appendChild(t);
     left.appendChild(b);
@@ -120,33 +123,37 @@ async function loadAllAnnouncements() {
 }
 
 function wireUI() {
-  el("loginForm").addEventListener("submit", async (ev) => {
+  $("loginForm").addEventListener("submit", async (ev) => {
     ev.preventDefault();
-    el("loginMsg").textContent = "";
-    const email = el("loginEmail").value.trim();
-    const pass = el("loginPass").value;
+    $("loginMsg").textContent = "";
+
+    const email = $("loginEmail").value.trim();
+    const pass = $("loginPass").value;
+
     try {
-      const { error } = await login(email, pass);
+      const { error } = await doLogin(email, pass);
       if (error) throw error;
-      await refreshSessionUI();
+      await refreshUI();
     } catch (e) {
       console.error(e);
-      el("loginMsg").textContent = "Login failed.";
+      $("loginMsg").textContent = "Login failed.";
     }
   });
 
-  el("logoutBtn").addEventListener("click", async () => {
-    await logout();
-    await refreshSessionUI();
+  $("logoutBtn").addEventListener("click", async () => {
+    await doLogout();
+    await refreshUI();
   });
 
-  el("annForm").addEventListener("submit", async (ev) => {
+  $("annForm").addEventListener("submit", async (ev) => {
     ev.preventDefault();
+
     const payload = {
-      title: el("annTitle").value.trim(),
-      body: el("annBody").value.trim(),
-      published: el("annPublished").checked
+      title: $("annTitle").value.trim(),
+      body: $("annBody").value.trim(),
+      published: $("annPublished").checked,
     };
+
     try {
       const { error } = await addAnnouncement(payload);
       if (error) throw error;
@@ -159,7 +166,8 @@ function wireUI() {
   });
 }
 
-(async function init(){
+(async function init() {
+  console.log("Admin script running.");
   wireUI();
-  await refreshSessionUI();
+  await refreshUI();
 })();
