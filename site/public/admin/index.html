@@ -1,49 +1,71 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Admin — The Hole Story</title>
-  <link rel="stylesheet" href="/styles/main.css" />
-  <link rel="stylesheet" href="/styles/admin.css" />
-  <script src="/config.js"></script>
-</head>
-<body>
-  <main class="container">
-    <header class="header">
-      <h1>Admin</h1>
-      <nav class="nav">
-        <a href="/">Home</a>
-        <button id="logoutBtn" class="link-btn" style="display:none;">Logout</button>
-      </nav>
-    </header>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Admin — The Hole Story</title>
+    <link rel="stylesheet" href="/styles/main.css" />
+    <link rel="stylesheet" href="/styles/admin.css" />
+    <script src="/config.js"></script>
+  </head>
+  <body>
+    <main class="container">
+      <header class="header">
+        <h1>Admin</h1>
+        <nav class="nav">
+          <a href="/">Home</a>
+          <a href="/community/">Community</a>
+          <button id="logoutBtn" class="link-btn" style="display: none">
+            Logout
+          </button>
+        </nav>
+      </header>
 
-    <section id="loginPanel" class="panel">
-      <h2>Login</h2>
-      <form id="loginForm" class="stack">
-        <input id="loginEmail" type="email" placeholder="email" autocomplete="email" required />
-        <input id="loginPass" type="password" placeholder="password" autocomplete="current-password" required />
-        <button type="submit">Login</button>
-      </form>
-      <div id="loginMsg" class="msg"></div>
-    </section>
+      <section id="loginPanel" class="panel">
+        <h2>Login</h2>
+        <form id="loginForm" class="stack">
+          <input
+            id="loginEmail"
+            type="email"
+            placeholder="email"
+            autocomplete="email"
+            required
+          />
+          <input
+            id="loginPass"
+            type="password"
+            placeholder="password"
+            autocomplete="current-password"
+            required
+          />
+          <button type="submit">Login</button>
+        </form>
+        <div id="loginMsg" class="msg"></div>
+      </section>
 
-    <section id="adminPanel" class="panel" style="display:none;">
-      <h2>Announcements</h2>
-      <form id="annForm" class="stack">
-        <input id="annTitle" type="text" placeholder="Title" required />
-        <textarea id="annBody" placeholder="Body" rows="4" required></textarea>
-        <label class="row"><input id="annPublished" type="checkbox" /> Published</label>
-        <button type="submit">Add announcement</button>
-      </form>
+      <section id="adminPanel" class="panel" style="display: none">
+        <h2>Announcements</h2>
+        <form id="annForm" class="stack">
+          <input id="annTitle" type="text" placeholder="Title" required />
+          <textarea
+            id="annBody"
+            placeholder="Body"
+            rows="4"
+            required
+          ></textarea>
+          <label class="row"
+            ><input id="annPublished" type="checkbox" /> Published</label
+          >
+          <button type="submit">Add announcement</button>
+        </form>
 
-      <div class="divider"></div>
+        <div class="divider"></div>
 
-      <h2>Manage</h2>
-      <div id="annList" class="list">Loading…</div>
-    </section>
-  </main>
+        <h2>Manage</h2>
+        <div id="annList" class="list">Loading…</div>
+      </section>
+    </main>
 
-  <script type="module" src="/scripts/admin.js"></script>
-</body>
+    <script type="module" src="/scripts/admin.js"></script>
+  </body>
 </html>
