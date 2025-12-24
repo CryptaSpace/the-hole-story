@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Community — The Hole Story</title>
+  <link rel="stylesheet" href="/styles/main.css" />
+  <script src="/config.js"></script>
+</head>
+<body>
+  <main class="container">
+    <header class="header">
+      <h1>Community</h1>
+      <nav class="nav">
+        <a href="/">Home</a>
+        <a href="/community/">Community</a>
+        <a href="/admin/">Admin</a>
+      </nav>
+    </header>
+
+    <section class="panel">
+      <h2>Submit a story</h2>
+      <p class="msg">
+        Your submission is private. Names aren’t required. Contact info is optional and never public.
+      </p>
+
+      <form id="storyForm" class="stack">
+        <input id="displayName" type="text" placeholder="Alias (optional)" maxlength="40" />
+        <input id="contactEmail" type="email" placeholder="Email (optional, private)" autocomplete="email" />
+        <textarea id="storyText" placeholder="Your story…" rows="10" required></textarea>
+
+        <!-- Honeypot anti-spam: should stay empty -->
+        <input id="website" type="text" style="display:none" tabindex="-1" autocomplete="off" />
+
+        <button type="submit">Submit</button>
+      </form>
+
+      <div id="msg" class="msg"></div>
+    </section>
+  </main>
+
+  <script type="module" src="/scripts/community.js"></script>
+</body>
+</html>
