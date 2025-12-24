@@ -1,0 +1,2 @@
+-- Paste your final Supabase schema + RLS policies here.
+-- Recommended: create announcements, videos, mailing_list, admins tables + RLS policies.

@@ -1,0 +1,1 @@
+date,time_az,platform,video_id,caption,hashtags,views_1h,views_24h,notes
