@@ -1,5 +1,3 @@
-window.__CONFIG__ = {
-  SUPABASE_URL: "https://rflkjptnzpkkrhmrstzj.supabase.co",
-  SUPABASE_ANON_KEY:
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJmbGtqcHRuenBra3JobXJzdHpqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY2MDcyMTAsImV4cCI6MjA4MjE4MzIxMH0.OpP9rlDgkOcpfmbW4DicwK0LPKiVFE7OPJpUbTheGG8",
-};
+window.SUPABASE_URL = "https://rflkjptnzpkkrhmrstzj.supabase.co";
+window.SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJmbGtqcHRuenBra3JobXJzdHpqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY2MDcyMTAsImV4cCI6MjA4MjE4MzIxMH0.OpP9rlDgkOcpfmbW4DicwK0LPKiVFE7OPJpUbTheGG8";
