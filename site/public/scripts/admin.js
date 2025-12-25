@@ -1,56 +1,50 @@
 import { getSupabaseClient } from "./supabase-client.js";
 
-const sb = getSupabaseClient();
+const $ = (id) => document.getElementById(id);
 
-async function sb() {
-  return await getSupabaseClient();
+// SINGLE Supabase instance for this page (no duplicate sb declarations)
+let sbPromise = null;
+function getSB() {
+  if (!sbPromise) sbPromise = Promise.resolve(getSupabaseClient());
+  return sbPromise;
+}
+
+function show(el, on) {
+  if (!el) return;
+  el.style.display = on ? "" : "none";
 }
 
 async function refreshUI() {
-  const client = await sb();
-  const { data, error } = await client.auth.getSession();
-  if (error) console.error(error);
+  const loginPanel = $("loginPanel");
+  const adminPanel = $("adminPanel");
+  const logoutBtn = $("logoutBtn");
 
-  const authed = !!data?.session;
+  const sb = await getSB();
+  const { data } = await sb.auth.getSession();
+  const session = data?.session;
 
-  $("loginPanel").style.display = authed ? "none" : "block";
-  $("adminPanel").style.display = authed ? "block" : "none";
-  $("logoutBtn").style.display = authed ? "inline-block" : "none";
+  if (!session) {
+    show(loginPanel, true);
+    show(adminPanel, false);
+    show(logoutBtn, false);
+    return;
+  }
 
-  if (authed) await loadAllAnnouncements();
+  show(loginPanel, false);
+  show(adminPanel, true);
+  show(logoutBtn, true);
+
+  await loadAnnouncements();
 }
 
-async function doLogin(email, password) {
-  const client = await sb();
-  return await client.auth.signInWithPassword({ email, password });
-}
+async function loadAnnouncements() {
+  const annList = $("annList");
+  if (!annList) return;
 
-async function doLogout() {
-  const client = await sb();
-  return await client.auth.signOut();
-}
+  annList.textContent = "Loading…";
+  const sb = await getSB();
 
-async function addAnnouncement(payload) {
-  const client = await sb();
-  return await client.from("announcements").insert([payload]);
-}
-
-async function deleteAnnouncement(id) {
-  const client = await sb();
-  return await client.from("announcements").delete().eq("id", id);
-}
-
-async function togglePublished(id, published) {
-  const client = await sb();
-  return await client.from("announcements").update({ published }).eq("id", id);
-}
-
-async function loadAllAnnouncements() {
-  const mount = $("annList");
-  mount.textContent = "Loading…";
-
-  const client = await sb();
-  const { data, error } = await client
+  const { data, error } = await sb
     .from("announcements")
     .select("id,title,body,published,created_at")
     .order("created_at", { ascending: false })
@@ -58,116 +52,151 @@ async function loadAllAnnouncements() {
 
   if (error) {
     console.error(error);
-    mount.textContent = "Error loading announcements.";
+    annList.textContent = "Error loading announcements.";
     return;
   }
 
-  mount.textContent = "";
   if (!data || data.length === 0) {
-    mount.textContent = "No announcements.";
+    annList.textContent = "No announcements yet.";
     return;
   }
 
-  for (const item of data) {
+  annList.textContent = "";
+  for (const a of data) {
     const row = document.createElement("div");
-    row.className = "admin-row";
+    row.className = "row";
 
     const left = document.createElement("div");
-    left.className = "admin-row-left";
+    left.className = "row-left";
 
     const t = document.createElement("div");
-    t.className = "card-title";
-    t.textContent = item.title;
+    t.className = "row-title";
+    t.textContent = a.title;
 
     const b = document.createElement("div");
-    b.className = "card-body";
-    b.textContent = item.body;
+    b.className = "row-body";
+    b.textContent = a.body;
 
     const m = document.createElement("div");
-    m.className = "card-meta";
-    m.textContent =
-      `${new Date(item.created_at).toLocaleString()} • ` +
-      (item.published ? "PUBLISHED" : "DRAFT");
+    m.className = "row-meta";
+    m.textContent = `${a.published ? "Published" : "Draft"} • ${new Date(
+      a.created_at
+    ).toLocaleString()}`;
 
     left.appendChild(t);
     left.appendChild(b);
     left.appendChild(m);
 
     const right = document.createElement("div");
-    right.className = "admin-row-right";
+    right.className = "row-right";
 
-    const pubBtn = document.createElement("button");
-    pubBtn.textContent = item.published ? "Unpublish" : "Publish";
-    pubBtn.addEventListener("click", async () => {
-      const { error: e2 } = await togglePublished(item.id, !item.published);
-      if (e2) alert(e2.message);
-      await loadAllAnnouncements();
+    const toggleBtn = document.createElement("button");
+    toggleBtn.textContent = a.published ? "Unpublish" : "Publish";
+    toggleBtn.addEventListener("click", async () => {
+      try {
+        const sb = await getSB();
+        const { error } = await sb
+          .from("announcements")
+          .update({ published: !a.published })
+          .eq("id", a.id);
+        if (error) throw error;
+        await loadAnnouncements();
+      } catch (e) {
+        console.error(e);
+        alert("Could not update.");
+      }
     });
 
     const delBtn = document.createElement("button");
     delBtn.textContent = "Delete";
     delBtn.addEventListener("click", async () => {
       if (!confirm("Delete this announcement?")) return;
-      const { error: e2 } = await deleteAnnouncement(item.id);
-      if (e2) alert(e2.message);
-      await loadAllAnnouncements();
+      try {
+        const sb = await getSB();
+        const { error } = await sb
+          .from("announcements")
+          .delete()
+          .eq("id", a.id);
+        if (error) throw error;
+        await loadAnnouncements();
+      } catch (e) {
+        console.error(e);
+        alert("Could not delete.");
+      }
     });
 
-    right.appendChild(pubBtn);
+    right.appendChild(toggleBtn);
     right.appendChild(delBtn);
 
     row.appendChild(left);
     row.appendChild(right);
-    mount.appendChild(row);
+    annList.appendChild(row);
   }
 }
 
 function wireUI() {
-  $("loginForm").addEventListener("submit", async (ev) => {
-    ev.preventDefault();
-    $("loginMsg").textContent = "";
+  const loginForm = $("loginForm");
+  const loginMsg = $("loginMsg");
+  const logoutBtn = $("logoutBtn");
+  const annForm = $("annForm");
 
-    const email = $("loginEmail").value.trim();
-    const pass = $("loginPass").value;
+  if (loginForm) {
+    loginForm.addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      if (loginMsg) loginMsg.textContent = "";
 
-    try {
-      const { error } = await doLogin(email, pass);
-      if (error) throw error;
-      await refreshUI();
-    } catch (e) {
-      console.error(e);
-      $("loginMsg").textContent = "Login failed.";
-    }
-  });
+      try {
+        const email = $("loginEmail").value.trim();
+        const password = $("loginPass").value;
 
-  $("logoutBtn").addEventListener("click", async () => {
-    await doLogout();
-    await refreshUI();
-  });
+        const sb = await getSB();
+        const { error } = await sb.auth.signInWithPassword({ email, password });
+        if (error) throw error;
 
-  $("annForm").addEventListener("submit", async (ev) => {
-    ev.preventDefault();
+        await refreshUI();
+      } catch (e) {
+        console.error(e);
+        if (loginMsg) loginMsg.textContent = "Login failed.";
+      }
+    });
+  }
 
-    const payload = {
-      title: $("annTitle").value.trim(),
-      body: $("annBody").value.trim(),
-      published: $("annPublished").checked,
-    };
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", async () => {
+      try {
+        const sb = await getSB();
+        await sb.auth.signOut();
+      } finally {
+        await refreshUI();
+      }
+    });
+  }
 
-    try {
-      const { error } = await addAnnouncement(payload);
-      if (error) throw error;
-      ev.target.reset();
-      await loadAllAnnouncements();
-    } catch (e) {
-      console.error(e);
-      alert("Could not add announcement. Check RLS/admin policy.");
-    }
-  });
+  if (annForm) {
+    annForm.addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      try {
+        const title = $("annTitle").value.trim();
+        const body = $("annBody").value.trim();
+        const published = $("annPublished").checked;
+
+        const sb = await getSB();
+        const { error } = await sb
+          .from("announcements")
+          .insert([{ title, body, published }]);
+
+        if (error) throw error;
+
+        ev.target.reset();
+        await loadAnnouncements();
+      } catch (e) {
+        console.error(e);
+        alert("Could not add announcement.");
+      }
+    });
+  }
 }
 
-(async function init() {
-  console.log("Admin script running.");
-  wireUI();
-  await refreshUI();
-})();
+// Boot
+wireUI();
+refreshUI();
