@@ -1,6 +1,6 @@
 import { getSupabaseClient } from "./supabase-client.js";
 
-const $ = (id) => document.getElementById(id);
+const sb = getSupabaseClient();
 
 async function sb() {
   return await getSupabaseClient();

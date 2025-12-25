@@ -1,6 +1,6 @@
 import { getSupabaseClient } from "./supabase-client.js";
 
-const $ = (id) => document.getElementById(id);
+const sb = getSupabaseClient();
 
 async function submitStory(payload) {
   const sb = await getSupabaseClient();
@@ -27,7 +27,7 @@ storyForm.addEventListener("submit", async (ev) => {
   const payload = {
     display_name: displayName.value.trim() || null,
     contact_email: contactEmail.value.trim().toLowerCase() || null,
-    story_text
+    story_text,
   };
 
   try {
